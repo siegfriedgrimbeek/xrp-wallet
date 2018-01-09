@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XRP Wallet</title>
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/css/app.css">
+  <script src="https://unpkg.com/vue"></script>
+</head>
+<body>
+  <div id="app">
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">XRP Wallet</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">{{ address }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well">
+                    <h1 class="text-center">{{ ripple_wallet.usd }} USD / {{ ripple_wallet.xrp }} XRP</h1>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 50px">
+            <div class="col-md-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>XRP Price (USD)</th>
+                            <th>Market Cap (USD)</th>
+                            <th>1H Change (%)</th>
+                            <th>24H Change (%)</th>
+                            <th>7D Change (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ ripple_coin.price_usd }}</td>
+                            <td>{{ ripple_coin.market_cap_usd }}</td>
+                            <td>{{ ripple_coin.percent_change_1h }}</td>
+                            <td>{{ ripple_coin.percent_change_24h }}</td>
+                            <td>{{ ripple_coin.percent_change_7d }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+  <script>
+      const { remote } = require('electron');
+      const mainProcess = remote.require('./main.js');
+
+      var app = new Vue({
+          el: '#app',
+          data: {
+              address: "",
+              ripple_coin: {},
+              ripple_wallet: {
+                  xrp: 0.00,
+                  usd: 0.00
+              }
+          },
+          mounted() {
+              this.address = mainProcess.address;
+              mainProcess.getRippleMarketValue().then(result => {
+                  this.ripple_coin = result[0];
+                  mainProcess.getRippleWalletValue().then(result => {
+                      this.ripple_wallet.xrp = result[0].value;
+                      this.ripple_wallet.usd = (this.ripple_wallet.xrp * this.ripple_coin.price_usd).toFixed(2);
+                  });
+              });
+          },
+          methods: { }
+      });
+  </script>
+</body>
+</html>
